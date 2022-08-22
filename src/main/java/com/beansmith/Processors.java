@@ -50,7 +50,7 @@ public class Processors {
         String source = parameters.getSourceColumn().getSourceColumnName();
         Object defaultValue = parameters.getConstantParameter("defaultValue").getValue();
         Object valToTest = record.get(source);
-        if(!(valToTest == null || valToTest.toString().isEmpty())){
+        if(valToTest == null || valToTest.toString().isEmpty()){
             record.put(source, defaultValue);
         }
     }
