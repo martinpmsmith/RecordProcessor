@@ -1,19 +1,12 @@
 package com.beansmith;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 public class ProcessorParameter {
-    public enum ParameterType {
-        INPUT,
-        OUTPUT,
-        CONSTANT;
+    public ProcessorParameter(String name) {
+        this.name = name;
     }
 
-    private String sourceName;
-    private String targetName;
-    private String value;
-    private ParameterType type;
+    protected String name;
 }

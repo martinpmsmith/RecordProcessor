@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.LinkedHashMap;
-import java.util.Optional;
 import java.util.UUID;
 
 @Getter
@@ -16,7 +15,8 @@ public class ValidatableRecord {
     private final UUID id = UUID.randomUUID();
     private final LinkedHashMap<String, Object> data = new LinkedHashMap<>();
 
-    public ValidatableRecord() {
+    public
+    ValidatableRecord() {
         super();
     }
 

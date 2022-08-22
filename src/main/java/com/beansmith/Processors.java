@@ -2,53 +2,69 @@ package com.beansmith;
 
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class Processors {
 
-    private static final HashMap<String, RecordProcessor> processors = new HashMap<>();
+    private static final HashMap<String, RecordProcessor2> processors = new HashMap<>();
 
     public static void build() {
 
         processors.put("validateInt", Processors::validateInt);
         processors.put("rangeCheck", Processors::rangeCheck);
+        processors.put("validateNotNull", Processors::validateNotNull);
+        processors.put("setDefaultIfNull", Processors::defaultIfNull);
     }
 
-    public static RecordProcessor getProcessor(String key) {
+    public static RecordProcessor2 getProcessor(String key) {
         if (processors.isEmpty()) build();
         return processors.get(key);
     }
 
-    public static void rangeCheck(ValidatableRecord record, Map<String, ProcessorParameter> parameters) {
-        ProcessorParameter param1 = parameters.entrySet().iterator().next().getValue();
-        String sourceColumn = param1.getSourceName();
-        String targetColumn = param1.getTargetName();
-        float lower = parameters.get("lower") == null ? -Float.MAX_VALUE : Float.parseFloat(parameters.get("lower").getValue());
-        float upper = parameters.get("upper") == null ? Float.MAX_VALUE : Float.parseFloat(parameters.get("upper").getValue());
-        String val = record.get(sourceColumn).toString();
-        if (val.isEmpty()) {
-            record.put(targetColumn, false);
-        } else {
+    public static void rangeCheck(ValidatableRecord record, ProcessorData parameters) {
+        String sourceColumn = parameters.getSourceColumn().getSourceColumnName();
+        String targetColumn  = parameters.getTargetColumn() == null ? sourceColumn : parameters.getTargetColumn();
+        ConstantParameter low = parameters.getConstantParameter("lower") ;
+        try {
+            float lower = low == null ? -Float.MAX_VALUE : Float.parseFloat(low.getValue().toString());
+            ConstantParameter up = parameters.getConstantParameter("upper");
+            float upper = up == null ? Float.MAX_VALUE : Float.parseFloat(up.getValue().toString());
+            String val = record.get(sourceColumn).toString();
             float valToTest = Float.parseFloat(val);
             boolean result = lower < valToTest && upper > valToTest;
             record.put(targetColumn, result);
+        } catch (NumberFormatException nfe)
+        {
+            record.put(targetColumn, false);
         }
-//        if the result if false add to audit
+    }
+
+    public static void validateNotNull(ValidatableRecord record, ProcessorData parameters) {
+        String source = parameters.getSourceColumn().getSourceColumnName();
+        Object valToTest = record.get(source);
+        boolean valid = valToTest == null || valToTest.toString().isEmpty();
+        record.put(parameters.getTargetColumn(), true);
 
     }
 
-    public static void rangeCheckEquals(ValidatableRecord record, Map<String, ProcessorParameter> parameters) {
+    public static void defaultIfNull(ValidatableRecord record, ProcessorData parameters) {
+        String source = parameters.getSourceColumn().getSourceColumnName();
+        Object defaultValue = parameters.getConstantParameter("defaultValue").getValue();
+        Object valToTest = record.get(source);
+        if(!(valToTest == null || valToTest.toString().isEmpty())){
+            record.put(source, defaultValue);
+        }
     }
 
-    public static void validateInt(ValidatableRecord record, Map<String, ProcessorParameter> parameters) {
-        ProcessorParameter param = parameters.entrySet().iterator().next().getValue();
-        String source = param.getSourceName();
+
+    public static void validateInt(ValidatableRecord record, ProcessorData parameters) {
+        InputParameter param = parameters.getSourceColumn();
+        String source = param.getSourceColumnName();
         Object valToTest = record.get(source);
         try {
             int val = Integer.parseInt(valToTest.toString());
-            record.put(param.getTargetName(), true);
+            record.put(parameters.getTargetColumn(), true);
         } catch (NumberFormatException e) {
-            record.put(param.getTargetName(), false);
+            record.put(parameters.getTargetColumn(), false);
         }
     }
 }
