@@ -19,20 +19,25 @@ public class ProcessorData {
     ProcessorType type;
 
     Map<String, InputParameter> inputs = new LinkedHashMap<>();
-    private String targetColumn;
+    private String targetColumnName;
 
     Map<String, ConstantParameter> constants = new LinkedHashMap<>();
 
-    public String getTargetColumn() {
-        return targetColumn;
+    public String getTargetColumnName() {
+        if (type.equals(ProcessorType.ENRICHMENT))
+            return getSourceColumnName();
+        else
+            return targetColumnName;
     }
 
-    public InputParameter getSourceColumn() {
-        return inputs.entrySet().stream().findFirst().get().getValue();
+    public String getSourceColumnName() {
+        if (inputs.size() == 0)
+            throw new IllegalStateException("Parameter data must have at least one input column");
+        return inputs.entrySet().stream().findFirst().get().getValue().getSourceColumnName();
     }
 
-    public ProcessorData setTargetColumn(String output) {
-        this.targetColumn = output;
+    public ProcessorData setTargetColumnName(String output) {
+        this.targetColumnName = output;
         return this;
     }
 
@@ -42,9 +47,8 @@ public class ProcessorData {
     }
 
     public ProcessorData addConstantParameter(ConstantParameter constant) {
-
         constants.put(constant.getName(), constant);
-        return  this;
+        return this;
     }
 
     public ConstantParameter getConstantParameter(String name) {

@@ -4,27 +4,27 @@ package com.beansmith;
 import java.util.HashMap;
 
 public class Processors {
-
-    private static final HashMap<String, RecordProcessor2> processors = new HashMap<>();
+    public static final String VALIDATE_FLOAT = "validateFloat";
+    private static final HashMap<String, RecordProcessor> processors = new HashMap<>();
 
     public static void build() {
 
-        processors.put("validateInt", Processors::validateInt);
+        processors.put(VALIDATE_FLOAT, Processors::validateFloat);
         processors.put("rangeCheck", Processors::rangeCheck);
         processors.put("validateNotNull", Processors::validateNotNull);
         processors.put("setDefaultIfNull", Processors::defaultIfNull);
     }
 
-    public static RecordProcessor2 getProcessor(String key) {
+    public static RecordProcessor getProcessor(String key) {
         if (processors.isEmpty()) build();
         return processors.get(key);
     }
 
     public static void rangeCheck(ValidatableRecord record, ProcessorData parameters) {
-        String sourceColumn = parameters.getSourceColumn().getSourceColumnName();
-        String targetColumn  = parameters.getTargetColumn() == null ? sourceColumn : parameters.getTargetColumn();
-        ConstantParameter low = parameters.getConstantParameter("lower") ;
+        String sourceColumn = parameters.getSourceColumnName();
+        String targetColumn  = parameters.getTargetColumnName() == null ? sourceColumn : parameters.getTargetColumnName();
         try {
+            ConstantParameter low = parameters.getConstantParameter("lower") ;
             float lower = low == null ? -Float.MAX_VALUE : Float.parseFloat(low.getValue().toString());
             ConstantParameter up = parameters.getConstantParameter("upper");
             float upper = up == null ? Float.MAX_VALUE : Float.parseFloat(up.getValue().toString());
@@ -39,32 +39,31 @@ public class Processors {
     }
 
     public static void validateNotNull(ValidatableRecord record, ProcessorData parameters) {
-        String source = parameters.getSourceColumn().getSourceColumnName();
+        String source = parameters.getSourceColumnName();
         Object valToTest = record.get(source);
         boolean valid = valToTest == null || valToTest.toString().isEmpty();
-        record.put(parameters.getTargetColumn(), true);
+        record.put(parameters.getTargetColumnName(), true);
 
     }
 
     public static void defaultIfNull(ValidatableRecord record, ProcessorData parameters) {
-        String source = parameters.getSourceColumn().getSourceColumnName();
+        String source = parameters.getSourceColumnName();
         Object defaultValue = parameters.getConstantParameter("defaultValue").getValue();
         Object valToTest = record.get(source);
         if(valToTest == null || valToTest.toString().isEmpty()){
-            record.put(source, defaultValue);
+            record.put(parameters.getTargetColumnName(), defaultValue);
         }
     }
 
 
-    public static void validateInt(ValidatableRecord record, ProcessorData parameters) {
-        InputParameter param = parameters.getSourceColumn();
-        String source = param.getSourceColumnName();
+    public static void validateFloat(ValidatableRecord record, ProcessorData parameters) {
+        String source = parameters.getSourceColumnName();
         Object valToTest = record.get(source);
         try {
-            int val = Integer.parseInt(valToTest.toString());
-            record.put(parameters.getTargetColumn(), true);
+            float val = Float.parseFloat(valToTest.toString());
+            record.put(parameters.getTargetColumnName(), true);
         } catch (NumberFormatException e) {
-            record.put(parameters.getTargetColumn(), false);
+            record.put(parameters.getTargetColumnName(), false);
         }
     }
 }
