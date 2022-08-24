@@ -12,7 +12,13 @@ public class ProcessorData {
         ENRICHMENT
     }
 
-    public ProcessorData(ProcessorType type) {
+    public String getProcessorName() {
+        return processorName;
+    }
+
+    private String processorName;
+    public ProcessorData(String processorName, ProcessorType type) {
+        this.processorName = processorName;
         this.type = type;
     }
 
@@ -51,6 +57,10 @@ public class ProcessorData {
         return this;
     }
 
+    public void process(ValidatableRecord data)
+    {
+        Processors.getProcessor(processorName).process(data, this);
+    }
     public ConstantParameter getConstantParameter(String name) {
         return constants.get(name);
     }

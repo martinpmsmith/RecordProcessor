@@ -14,23 +14,25 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
 
-        ProcessorData rangeData = new ProcessorData(ProcessorData.ProcessorType.VALIDATION)
-            .addInputParameter(new InputParameter("year", "LatestPopulationCensus"))
-            .addConstantParameter(new ConstantParameter("lower", "1970"))
-            .addConstantParameter(new ConstantParameter("upper", "2010"))
-            .setTargetColumnName("YearRange_valid");
+        ProcessorData rangeData = new ProcessorData("rangeCheck", ProcessorData.ProcessorType.VALIDATION)
+                .addInputParameter(new InputParameter("year", "LatestPopulationCensus"))
+                .addConstantParameter(new ConstantParameter("lower", "1970"))
+                .addConstantParameter(new ConstantParameter("upper", "2010"))
+                .setTargetColumnName("YearRange_valid");
 
-        ProcessorData intCheck = new ProcessorData(ProcessorData.ProcessorType.VALIDATION)
-            .addInputParameter(new InputParameter("Year", "LatestPopulationCensus"))
-            .setTargetColumnName("validateFloat_valid");
+        ProcessorData intCheck = new ProcessorData(Processors.VALIDATE_FLOAT, ProcessorData.ProcessorType.VALIDATION)
+                .addInputParameter(new InputParameter("Year", "LatestPopulationCensus"))
+                .setTargetColumnName("validateFloat_valid");
 
-        ProcessorData defaultNull = new ProcessorData(ProcessorData.ProcessorType.ENRICHMENT)
-            .addInputParameter(new InputParameter("p1", "LatestPopulationCensus"))
-            .addConstantParameter(new ConstantParameter("defaultValue", "1066"));
+        ProcessorData defaultNull = new ProcessorData("setDefaultIfNull",
+                ProcessorData.ProcessorType.ENRICHMENT)
+                .addInputParameter(new InputParameter("p1", "LatestPopulationCensus"))
+                .addConstantParameter(new ConstantParameter("defaultValue", "1066"));
 
-        ProcessorData latestHouseholdDefault = new ProcessorData(ProcessorData.ProcessorType.ENRICHMENT)
-            .addInputParameter(new InputParameter("p1", "LatestHouseholdSurvey"))
-            .addConstantParameter(new ConstantParameter("defaultValue", "1234"));
+        ProcessorData latestHouseholdDefault = new ProcessorData("setDefaultIfNull",
+                ProcessorData.ProcessorType.ENRICHMENT)
+                .addInputParameter(new InputParameter("p1", "LatestHouseholdSurvey"))
+                .addConstantParameter(new ConstantParameter("defaultValue", "1234"));
 
         System.out.println("Hello world!");
         String filename = "data/Country_small.csv";
@@ -50,10 +52,10 @@ public class Main {
                     for (int i = 0; i < (header == null ? 0 : header.size()); i++) {
                         data.put(header.get(i), record.get(i));
                     }
-                    Processors.getProcessor("rangeCheck").process(data, rangeData );
-                    Processors.getProcessor(Processors.VALIDATE_FLOAT).process(data, intCheck );
-                    Processors.getProcessor("setDefaultIfNull").process(data, defaultNull );
-                    Processors.getProcessor("setDefaultIfNull").process(data, latestHouseholdDefault );
+                    rangeData.process(data);
+                    intCheck.process(data);
+                    defaultNull.process(data);
+                    latestHouseholdDefault.process(data);
 
                     validatableRecords.add(data);
                 }
